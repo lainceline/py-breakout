@@ -1,4 +1,5 @@
 import pygame
+import pygame.font
 from constants import *
 from utils import draw_score_and_lives, draw_game_over, draw_bricks, draw_hud
 
@@ -8,6 +9,7 @@ class BreakoutGame:
         pygame.display.set_caption('Breakout Clone')
         self.clock = pygame.time.Clock()
         self.running = True
+        self.font = pygame.font.Font(None, 36)
         self.reset_game()
 
     def reset_game(self):
@@ -78,6 +80,8 @@ class BreakoutGame:
                     self.ball_attached = True
                     self.ball.x, self.ball.y = self.paddle.centerx - BALL_RADIUS, self.paddle.top - BALL_RADIUS * 2
                     self.ball_speed_y = -5
+            if not self.bricks:
+                self.game_over = True
 
     def draw(self):
         self.screen.fill(BLACK)
@@ -87,7 +91,8 @@ class BreakoutGame:
         draw_hud(self.screen)
         draw_score_and_lives(self.screen, self.score, self.lives)
         if self.game_over:
-            draw_game_over(self.screen)
+            game_over_text = self.font.render('Game Over! Press R to restart.', True, (255, 255, 255))
+            self.screen.blit(game_over_text, ((SCREEN_WIDTH - game_over_text.get_width()) // 2, (SCREEN_HEIGHT - game_over_text.get_height()) // 2))
         pygame.display.flip()
 
 def main():
