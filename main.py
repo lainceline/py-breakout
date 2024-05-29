@@ -16,8 +16,14 @@ pygame.display.set_caption('Breakout Clone')
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+ORANGE = (255, 165, 0)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 GRAY = (169, 169, 169)
+
+# Brick colors by row
+brick_colors = [RED, ORANGE, YELLOW, GREEN, BLUE]
 
 # Paddle
 paddle_width = 100
@@ -42,29 +48,27 @@ font = pygame.font.SysFont('Arial', 24)
 
 # Game state
 game_over = False
+ball_attached = True  # Ball starts attached to the paddle
 
 # Define game objects at the module level
 paddle = None
 ball = None
 bricks = []
 
-
 def reset_game():
-    global paddle, ball, bricks, score, lives, ball_speed_x, ball_speed_y, game_over
+    global paddle, ball, bricks, score, lives, ball_speed_x, ball_speed_y, game_over, ball_attached
     paddle = pygame.Rect((screen_width // 2) - (paddle_width // 2), game_height - 30, paddle_width, paddle_height)
-    ball = pygame.Rect(screen_width // 2, game_height // 2, ball_radius * 2, ball_radius * 2)
-    bricks = [pygame.Rect(col * brick_width, row * brick_height, brick_width, brick_height) for row in range(brick_rows)
-              for col in range(brick_cols)]
+    ball = pygame.Rect(paddle.centerx - ball_radius, paddle.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
+    bricks = [{'rect': pygame.Rect(col * brick_width, row * brick_height, brick_width, brick_height), 'color': brick_colors[row], 'points': (5 - row) * 10} for row in range(brick_rows) for col in range(brick_cols)]
     score = 0
     lives = 3
     ball_speed_x = 5
     ball_speed_y = -5
     game_over = False
-
+    ball_attached = True
 
 def get_game_state():
     return paddle, ball, bricks, ball_speed_x, ball_speed_y
-
 
 def draw_score_and_lives():
     score_text = font.render(f'Score: {score}', True, WHITE)
@@ -72,14 +76,12 @@ def draw_score_and_lives():
     screen.blit(score_text, (10, screen_height - hud_height + 10))
     screen.blit(lives_text, (screen_width - 100, screen_height - hud_height + 10))
 
-
 def draw_game_over():
     game_over_text = font.render('Game Over! Press R to Restart', True, WHITE)
     screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2))
 
-
 def main():
-    global score, lives, ball_speed_x, ball_speed_y, game_over
+    global score, lives, ball_speed_x, ball_speed_y, game_over, ball_attached
 
     # Main game loop
     running = True
@@ -92,8 +94,11 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN and game_over and event.key == pygame.K_r:
-                reset_game()
+            if event.type == pygame.KEYDOWN:
+                if game_over and event.key == pygame.K_r:
+                    reset_game()
+                if ball_attached and event.key == pygame.K_SPACE:
+                    ball_attached = False
 
         if not game_over:
             # Paddle movement
@@ -103,44 +108,50 @@ def main():
             if keys[pygame.K_RIGHT] and paddle.right < screen_width:
                 paddle.right += paddle_speed
 
-            # Ball movement
-            ball.x += ball_speed_x
-            ball.y += ball_speed_y
+            if ball_attached:
+                ball.x = paddle.centerx - ball_radius
+                ball.y = paddle.top - ball_radius * 2
+            else:
+                # Ball movement
+                ball.x += ball_speed_x
+                ball.y += ball_speed_y
 
-            # Ball collision with walls
-            if ball.left <= 0 or ball.right >= screen_width:
-                ball_speed_x *= -1
-            if ball.top <= 0:
-                ball_speed_y *= -1
-            if ball.colliderect(paddle):
-                ball_speed_y *= -1
-
-            # Ball collision with bricks
-            for brick in bricks[:]:
-                if ball.colliderect(brick):
+                # Ball collision with walls
+                if ball.left <= 0 or ball.right >= screen_width:
+                    ball_speed_x *= -1
+                if ball.top <= 0:
                     ball_speed_y *= -1
-                    bricks.remove(brick)
-                    score += 10  # Update score
-                    break
-
-            # Ball falls below paddle
-            if ball.bottom >= game_height:
-                lives -= 1
-                if lives == 0:
-                    game_over = True  # Set game over state
-                else:
-                    ball.x, ball.y = screen_width // 2, game_height // 2
+                if ball.colliderect(paddle):
                     ball_speed_y *= -1
+
+                # Ball collision with bricks
+                for brick in bricks[:]:
+                    if ball.colliderect(brick['rect']):
+                        ball_speed_y *= -1
+                        score += brick['points']  # Update score
+                        bricks.remove(brick)
+                        break
+
+                # Ball falls below paddle
+                if ball.bottom >= game_height:
+                    lives -= 1
+                    if lives == 0:
+                        game_over = True  # Set game over state
+                    else:
+                        ball_attached = True
+                        ball.x, ball.y = paddle.centerx - ball_radius, paddle.top - ball_radius * 2
+                        ball_speed_y = -5  # Reset ball speed
 
         # Drawing everything
         screen.fill(BLACK)
-
+        
         # Draw game area
         pygame.draw.rect(screen, BLACK, pygame.Rect(0, 0, screen_width, game_height))
         pygame.draw.rect(screen, BLUE, paddle)
         pygame.draw.ellipse(screen, WHITE, ball)
         for brick in bricks:
-            pygame.draw.rect(screen, RED, brick)
+            pygame.draw.rect(screen, brick['color'], brick['rect'])
+            pygame.draw.rect(screen, WHITE, brick['rect'], 2)  # Outline
 
         # Draw HUD area
         pygame.draw.rect(screen, GRAY, pygame.Rect(0, game_height, screen_width, hud_height))
@@ -148,10 +159,9 @@ def main():
 
         if game_over:
             draw_game_over()  # Draw the game over text
-
+        
         pygame.display.flip()
         clock.tick(60)
-
 
 if __name__ == '__main__':
     main()
