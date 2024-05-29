@@ -91,8 +91,7 @@ class BreakoutGame:
         draw_hud(self.screen)
         draw_score_and_lives(self.screen, self.score, self.lives)
         if self.game_over:
-            game_over_text = self.font.render('Game Over! Press R to restart.', True, (255, 255, 255))
-            self.screen.blit(game_over_text, ((SCREEN_WIDTH - game_over_text.get_width()) // 2, (SCREEN_HEIGHT - game_over_text.get_height()) // 2))
+            draw_game_over(self.screen)
         pygame.display.flip()
 
 def main():
