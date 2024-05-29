@@ -36,53 +36,59 @@ brick_height = 30
 bricks = [pygame.Rect(col * brick_width, row * brick_height, brick_width, brick_height) for row in range(brick_rows) for
           col in range(brick_cols)]
 
-# Main game loop
-running = True
-clock = pygame.time.Clock()
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+def main():
+    # Main game loop
+    running = True
+    clock = pygame.time.Clock()
 
-    # Paddle movement
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and paddle.left > 0:
-        paddle.left -= paddle_speed
-    if keys[pygame.K_RIGHT] and paddle.right < screen_width:
-        paddle.right += paddle_speed
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-    # Ball movement
-    ball.x += ball_speed_x
-    ball.y += ball_speed_y
+        # Paddle movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and paddle.left > 0:
+            paddle.left -= paddle_speed
+        if keys[pygame.K_RIGHT] and paddle.right < screen_width:
+            paddle.right += paddle_speed
 
-    # Ball collision with walls
-    if ball.left <= 0 or ball.right >= screen_width:
-        ball_speed_x *= -1
-    if ball.top <= 0:
-        ball_speed_y *= -1
-    if ball.colliderect(paddle):
-        ball_speed_y *= -1
+        # Ball movement
+        ball.x += ball_speed_x
+        ball.y += ball_speed_y
 
-    # Ball collision with bricks
-    for brick in bricks[:]:
-        if ball.colliderect(brick):
+        # Ball collision with walls
+        if ball.left <= 0 or ball.right >= screen_width:
+            ball_speed_x *= -1
+        if ball.top <= 0:
             ball_speed_y *= -1
-            bricks.remove(brick)
-            break
+        if ball.colliderect(paddle):
+            ball_speed_y *= -1
 
-    # Ball falls below paddle
-    if ball.bottom >= screen_height:
-        ball.x, ball.y = screen_width // 2, screen_height // 2
-        ball_speed_y *= -1
+        # Ball collision with bricks
+        for brick in bricks[:]:
+            if ball.colliderect(brick):
+                ball_speed_y *= -1
+                bricks.remove(brick)
+                break
 
-    # Drawing everything
-    screen.fill(BLACK)
-    pygame.draw.rect(screen, BLUE, paddle)
-    pygame.draw.ellipse(screen, WHITE, ball)
-    for brick in bricks:
-        pygame.draw.rect(screen, RED, brick)
+        # Ball falls below paddle
+        if ball.bottom >= screen_height:
+            ball.x, ball.y = screen_width // 2, screen_height // 2
+            ball_speed_y *= -1
 
-    pygame.display.flip()
-    clock.tick(60)
+        # Drawing everything
+        screen.fill(BLACK)
+        pygame.draw.rect(screen, BLUE, paddle)
+        pygame.draw.ellipse(screen, WHITE, ball)
+        for brick in bricks:
+            pygame.draw.rect(screen, RED, brick)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+if __name__ == '__main__':
+    main()
