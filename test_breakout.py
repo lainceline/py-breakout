@@ -1,7 +1,7 @@
 import unittest
 import pygame
 from game import BreakoutGame
-from constants import SCREEN_WIDTH, PADDLE_SPEED
+from constants import SCREEN_WIDTH, PADDLE_SPEED, SCREEN_HEIGHT
 
 class TestBreakout(unittest.TestCase):
     
@@ -69,6 +69,26 @@ class TestBreakout(unittest.TestCase):
                 self.ball_speed_y *= -1
                 self.bricks.remove(brick)
                 break
+
+
+    def test_ball_collision_with_side_walls(self):
+        self.ball.x = SCREEN_WIDTH
+        self.ball_speed_x = 5
+        self._simulate_ball_movement()
+        
+        self.assertLess(self.ball_speed_x, 0)
+
+    def test_paddle_movement_left_boundary(self):
+        self.paddle.left = 0
+        keys = {pygame.K_LEFT: True, pygame.K_RIGHT: False}
+        self._simulate_keypress(keys)
+        self.assertEqual(self.paddle.left, 0)
+
+    def test_paddle_movement_right_boundary(self):
+        self.paddle.right = SCREEN_WIDTH
+        keys = {pygame.K_LEFT: False, pygame.K_RIGHT: True}
+        self._simulate_keypress(keys)
+        self.assertEqual(self.paddle.right, SCREEN_WIDTH)
 
 if __name__ == '__main__':
     unittest.main()

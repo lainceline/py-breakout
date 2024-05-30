@@ -25,6 +25,9 @@ PADDLE_SPEED = 7
 BALL_RADIUS = 10
 BALL_SPEED_X = 5
 BALL_SPEED_Y = -5
+MIN_BALL_SPEED_Y = 2
+SPEEDUP_THRESHOLD = 0.5  # Adjust this value as needed
+MAX_BALL_SPEED_Y = 10  # Adjust this value as needed
 
 # Bricks
 BRICK_ROWS = 5

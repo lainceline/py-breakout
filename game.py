@@ -50,28 +50,43 @@ class BreakoutGame:
             self.paddle.left -= PADDLE_SPEED
         if keys[pygame.K_RIGHT] and self.paddle.right < SCREEN_WIDTH:
             self.paddle.right += PADDLE_SPEED
-
+    
         if self.ball_attached:
             self.ball.x = self.paddle.centerx - BALL_RADIUS
             self.ball.y = self.paddle.top - BALL_RADIUS * 2
         else:
             self.ball.x += self.ball_speed_x
             self.ball.y += self.ball_speed_y
-
+    
             if self.ball.left <= 0 or self.ball.right >= SCREEN_WIDTH:
                 self.ball_speed_x *= -1
+                # Add code to modify the x-speed based on certain conditions
+                if self.ball_speed_x > 0:
+                    self.ball_speed_x += 1
+                else:
+                    self.ball_speed_x -= 1
             if self.ball.top <= 0:
                 self.ball_speed_y *= -1
             if self.ball.colliderect(self.paddle):
+                # Add English to the ball based on where it hit the paddle
+                paddle_center = self.paddle.left + PADDLE_WIDTH / 2
+                hit_position = (self.ball.centerx - paddle_center) / (PADDLE_WIDTH / 2)
+                self.ball_speed_x = BALL_SPEED_X * hit_position
+            
+                # Increase the y-speed based on where the ball hit the paddle
+                # The farther from the center, the faster the y-speed
+                # Ensure the y-speed does not exceed a maximum value
+                if abs(hit_position) > SPEEDUP_THRESHOLD:
+                    self.ball_speed_y = min(MAX_BALL_SPEED_Y, abs(self.ball_speed_y * (1 + abs(hit_position))))
                 self.ball_speed_y *= -1
-
+    
             for brick in self.bricks[:]:
                 if self.ball.colliderect(brick['rect']):
                     self.ball_speed_y *= -1
                     self.score += brick['points']
                     self.bricks.remove(brick)
                     break
-
+    
             if self.ball.bottom >= GAME_HEIGHT:
                 self.lives -= 1
                 if self.lives == 0:
